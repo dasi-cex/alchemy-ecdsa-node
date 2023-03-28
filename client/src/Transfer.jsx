@@ -1,24 +1,38 @@
-import { useState } from "react";
 import server from "./server";
 
-function Transfer({ address, setBalance }) {
-  const [sendAmount, setSendAmount] = useState("");
-  const [recipient, setRecipient] = useState("");
+function Transfer({ 
+    setBalance, 
+    address, 
+    sendAmount, 
+    setSendAmount, 
+    recipient, 
+    setRecipient, 
+    signature,
+    nonce,
+    setNonce
+  }) {
 
   const setValue = (setter) => (evt) => setter(evt.target.value);
-
+  
   async function transfer(evt) {
     evt.preventDefault();
 
     try {
       const {
-        data: { balance },
+        data: { 
+          balance: newBalance, 
+          nonce: newNonce 
+        },
       } = await server.post(`send`, {
         sender: address,
         amount: parseInt(sendAmount),
         recipient,
+        nonce,
+        signature
       });
-      setBalance(balance);
+      setBalance(newBalance);
+      setNonce(newNonce);
+      console.log('Successfully sent transaction with this data', address, sendAmount, recipient, newNonce, signature);
     } catch (ex) {
       alert(ex.response.data.message);
     }
@@ -45,8 +59,16 @@ function Transfer({ address, setBalance }) {
           onChange={setValue(setRecipient)}
         ></input>
       </label>
+      
+      <div className="info-field">
+        Nonce: {nonce}
+      </div>
 
-      <input type="submit" className="button" value="Transfer" />
+      <div className="info-field">
+        Signature: {signature}
+      </div>
+
+      <input type="submit" className="button" value="Transfer" disabled={!signature} />
     </form>
   );
 }
